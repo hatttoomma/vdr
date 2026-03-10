@@ -1,18 +1,20 @@
 import json
-import os
 from typing import Iterable
 from urllib import error, request
+
+from config import load_config
 
 
 class TextSearch:
     def __init__(
         self,
         api_key: str | None = None,
-        search_url: str = "https://google.serper.dev/search",
+        search_url: str | None = None,
         max_results: int = 10,
     ) -> None:
-        self.api_key = api_key or os.getenv("SERPER_API_KEY") or os.getenv("SERP_API_KEY")
-        self.search_url = search_url
+        config = load_config()
+        self.api_key = api_key or config.serper_api_key
+        self.search_url = search_url or config.serper_search_url
         self.max_results = max_results
 
     def search(self, query: str | Iterable[str]) -> str:

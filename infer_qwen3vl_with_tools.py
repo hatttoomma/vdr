@@ -157,7 +157,7 @@ def main():
     parser.add_argument("--prompt_key", type=str, default="web_search_only")
     parser.add_argument("--max_new_tokens", type=int, default=128)
     parser.add_argument("--max_tool_turns", type=int, default=1)
-    parser.add_argument("--limit", type=int, default=50, help="只跑前多少条，-1 表示全量")
+    parser.add_argument("--limit", type=int, default=-1, help="只跑前多少条，-1 表示全量")
     parser.add_argument("--resume", action="store_true", help="若输出文件已存在，则跳过已完成样本")
     args = parser.parse_args()
 
