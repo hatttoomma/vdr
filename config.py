@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Config:
-    serper_api_key: str | None
+    serper_api_key: str
     serper_search_url: str
 
 

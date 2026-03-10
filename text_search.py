@@ -8,8 +8,8 @@ from config import load_config
 class TextSearch:
     def __init__(
         self,
-        api_key: str | None = None,
-        search_url: str | None = None,
+        api_key: str,
+        search_url: str,
         max_results: int = 10,
     ) -> None:
         config = load_config()
