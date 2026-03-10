@@ -10,10 +10,10 @@ system_prompt:
     # TOOL USAGE FORMAT:
 
     When you decide to use a tool, you MUST use the following format:
-    <tool>\n{"name": tool_name, "args": tool_args}
+    <tool>\n{"name": tool_name, "args": tool_args}\n</tool>
 
     For example:
-    <tool>\n{"name": "web_search", "args": {"query": "What is the capital of France?"}}
+    <tool>\n{"name": "web_search", "args": {"query": "What is the capital of France?"}}\n</tool>
 
     # INSTRUCTIONS:
     

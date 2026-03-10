@@ -54,14 +54,26 @@ def run_generation(
 
 
 def extract_tool_call(output_text: str) -> dict[str, Any] | None:
-    marker = "<tool>"
-    if marker not in output_text:
+    open_tag = "<tool>"
+    close_tag = "</tool>"
+
+    start = output_text.find(open_tag)
+    if start == -1:
         return None
 
-    payload = output_text.split(marker, 1)[1].lstrip()
-    decoder = json.JSONDecoder()
+    start += len(open_tag)
+    end = output_text.find(close_tag, start)
+    if end == -1:
+        payload = output_text[start:]
+    else:
+        payload = output_text[start:end]
+
+    payload = payload.strip()
+    if not payload:
+        return None
+
     try:
-        tool_call, _ = decoder.raw_decode(payload)
+        tool_call = json.loads(payload)
     except JSONDecodeError:
         return None
 
@@ -155,7 +167,7 @@ def main():
     parser.add_argument("--output_file", type=str, default="vdr_bench_qwen3vl_2b_predictions.jsonl")
     parser.add_argument("--prompt_file", type=str, default="prompt.yaml")
     parser.add_argument("--prompt_key", type=str, default="web_search_only")
-    parser.add_argument("--max_new_tokens", type=int, default=128)
+    parser.add_argument("--max_new_tokens", type=int, default=4096)
     parser.add_argument("--max_tool_turns", type=int, default=1)
     parser.add_argument("--limit", type=int, default=-1, help="只跑前多少条，-1 表示全量")
     parser.add_argument("--resume", action="store_true", help="若输出文件已存在，则跳过已完成样本")
