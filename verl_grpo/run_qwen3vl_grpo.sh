@@ -6,10 +6,10 @@ ENGINE=${1:-vllm}
 TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
 VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
-GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.85}
+GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.65}
 ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-9216}
 ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-9216}
-ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-False}
+ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-True}
 
 python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
@@ -36,7 +36,7 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.enable_chunked_prefill="${ROLLOUT_ENABLE_CHUNKED_PREFILL}" \
   actor_rollout_ref.rollout.n=1 \
   actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
-  actor_rollout_ref.rollout.log_prob_micro_batch_size=16 \
+  actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
   custom_reward_function.path="$(pwd)/verl_grpo/reward_vdr.py" \
   custom_reward_function.name=compute_score \
   algorithm.use_kl_in_reward=False \
