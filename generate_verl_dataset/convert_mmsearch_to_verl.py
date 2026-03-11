@@ -33,7 +33,7 @@ from PIL import Image
 
 
 DATASET_NAME = "CaraJ/MMSearch"
-MAX_IMAGE_SIZE = 768
+TARGET_IMAGE_SIZE = (512, 512)
 
 
 def safe_get(example: Dict[str, Any], key: str, default=None):
@@ -97,10 +97,9 @@ def has_valid_image(x: Any) -> bool:
     return True
 
 
-def to_resized_pil_image(x: Any, max_size: int = MAX_IMAGE_SIZE):
+def to_resized_pil_image(x: Any, target_size=TARGET_IMAGE_SIZE):
     """
-    Convert dataset image object to PIL image and resize it
-    so width/height are both <= max_size.
+    Convert dataset image object to PIL image and force resize to target_size.
     """
     if x is None:
         return None
@@ -125,10 +124,7 @@ def to_resized_pil_image(x: Any, max_size: int = MAX_IMAGE_SIZE):
             return None
 
     image = image.convert("RGB")
-    width, height = image.size
-    if width > max_size or height > max_size:
-        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
-    return image
+    return image.resize(target_size, Image.Resampling.LANCZOS)
 
 
 def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
@@ -158,7 +154,7 @@ def make_map_fn(subset: str, use_image_field: str):
         gt_requery = safe_get(example, "gt_requery", "")
 
         image_obj = safe_get(example, use_image_field, None)
-        resized_image = to_resized_pil_image(image_obj, max_size=MAX_IMAGE_SIZE)
+        resized_image = to_resized_pil_image(image_obj, target_size=TARGET_IMAGE_SIZE)
         images = [resized_image] if resized_image is not None else []
 
         prompt_text = build_prompt_text(example, use_image_field)
