@@ -187,7 +187,11 @@ def main():
     parser.add_argument("--max_samples", type=int, default=-1,
                         help="Use -1 for all samples")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--drop_samples_without_image", action="store_true")
+    parser.add_argument(
+        "--drop_samples_without_image",
+        action="store_true",
+        help="Drop rows without a valid source image before mapping.",
+    )
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -221,6 +225,18 @@ def main():
     map_fn = make_map_fn(args.subset, args.use_image_field)
     train_ds = train_ds.map(map_fn, with_indices=True, remove_columns=train_ds.column_names)
     val_ds = val_ds.map(map_fn, with_indices=True, remove_columns=val_ds.column_names)
+
+    # Safety guard: Qwen2.5-VL processor crashes on `images=[]`.
+    # Keep only rows that still carry at least one valid image after mapping.
+    train_before = len(train_ds)
+    val_before = len(val_ds)
+    train_ds = train_ds.filter(lambda x: isinstance(x.get("images", None), list) and len(x["images"]) > 0)
+    val_ds = val_ds.filter(lambda x: isinstance(x.get("images", None), list) and len(x["images"]) > 0)
+    print(
+        f"After image guard -> train: {len(train_ds)} "
+        f"(dropped {train_before - len(train_ds)}), "
+        f"val: {len(val_ds)} (dropped {val_before - len(val_ds)})"
+    )
 
     train_path = os.path.join(args.output_dir, "train.parquet")
     val_path = os.path.join(args.output_dir, "val.parquet")
