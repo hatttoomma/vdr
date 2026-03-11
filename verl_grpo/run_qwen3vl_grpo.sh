@@ -15,7 +15,7 @@ python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=2 \
+  data.train_batch_size=1 \
   data.max_prompt_length=8192 \
   data.max_response_length=512 \
   data.filter_overlong_prompts=True \
@@ -37,6 +37,11 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.n=1 \
   actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
+  actor_rollout_ref.rollout.engine_kwargs.vllm.kv_cache_dtype=fp8 \
+  actor_rollout_ref.actor.fsdp_config.param_offload=True \
+  actor_rollout_ref.actor.fsdp_config.grad_offload=True \
+  actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
+  actor_rollout_ref.model.enable_activation_offload=True \
   custom_reward_function.path="$(pwd)/verl_grpo/reward_vdr.py" \
   custom_reward_function.name=compute_score \
   algorithm.use_kl_in_reward=False \
@@ -44,7 +49,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.logger='["console"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
-  trainer.n_gpus_per_node=2 \
+  trainer.n_gpus_per_node=1 \
   trainer.nnodes=1 \
   trainer.save_freq=20 \
   trainer.test_freq=10 \
