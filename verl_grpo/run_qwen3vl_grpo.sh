@@ -3,8 +3,8 @@ set -euo pipefail
 set -x
 
 ENGINE=${1:-vllm}
-TRAIN_FILE=${TRAIN_FILE:-"./data/vdr_bench_verl/train.parquet"}
-VAL_FILE=${VAL_FILE:-"./data/vdr_bench_verl/val.parquet"}
+TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
+VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
 
 python3 -m verl.trainer.main_ppo \

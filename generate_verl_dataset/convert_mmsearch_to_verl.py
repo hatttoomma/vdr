@@ -178,7 +178,7 @@ def make_map_fn(subset: str, use_image_field: str):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output_dir", type=str, required=True)
+    parser.add_argument("--output_dir", type=str, default='./mmsearch_data/')
     parser.add_argument("--subset", type=str, default="end2end",
                         choices=["end2end", "rerank", "summarization"])
     parser.add_argument("--use_image_field", type=str, default="query_image",
