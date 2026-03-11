@@ -25,12 +25,15 @@ Optional:
 import os
 import json
 import argparse
+import io
 from typing import Any, Dict, List
 
 from datasets import load_dataset, Dataset
+from PIL import Image
 
 
 DATASET_NAME = "CaraJ/MMSearch"
+MAX_IMAGE_SIZE = 768
 
 
 def safe_get(example: Dict[str, Any], key: str, default=None):
@@ -94,6 +97,40 @@ def has_valid_image(x: Any) -> bool:
     return True
 
 
+def to_resized_pil_image(x: Any, max_size: int = MAX_IMAGE_SIZE):
+    """
+    Convert dataset image object to PIL image and resize it
+    so width/height are both <= max_size.
+    """
+    if x is None:
+        return None
+
+    image = None
+    if isinstance(x, dict):
+        image_bytes = x.get("bytes", None)
+        image_path = x.get("path", None)
+        if image_bytes is not None:
+            image = Image.open(io.BytesIO(image_bytes))
+        elif image_path:
+            image = Image.open(image_path)
+        else:
+            return None
+    elif isinstance(x, Image.Image):
+        image = x
+    else:
+        # For decoded HF image objects compatible with PIL interface.
+        if hasattr(x, "convert") and hasattr(x, "size"):
+            image = x
+        else:
+            return None
+
+    image = image.convert("RGB")
+    width, height = image.size
+    if width > max_size or height > max_size:
+        image.thumbnail((max_size, max_size), Image.Resampling.LANCZOS)
+    return image
+
+
 def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
     query = safe_get(example, "query", "").strip()
     area = safe_get(example, "area", "")
@@ -135,7 +172,8 @@ def make_map_fn(subset: str, use_image_field: str):
         gt_requery = safe_get(example, "gt_requery", "")
 
         image_obj = safe_get(example, use_image_field, None)
-        images = [image_obj] if has_valid_image(image_obj) else []
+        resized_image = to_resized_pil_image(image_obj, max_size=MAX_IMAGE_SIZE)
+        images = [resized_image] if resized_image is not None else []
 
         prompt_text = build_prompt_text(example, use_image_field)
 
