@@ -18,20 +18,18 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 import hydra
 import ray
 import torch
-from omegaconf import OmegaConf
 from split_monkey_patch import fit
 
 from verl import DataProto
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
-from verl.trainer.ppo.utils import need_reference_policy
-from verl.utils.reward_score import gsm8k, math_reward
+from verl.utils.reward_score import gsm8k, math
 
 
 def _select_rm_score_fn(data_source):
     if data_source == "openai/gsm8k":
         return gsm8k.compute_score
     elif data_source == "lighteval/MATH":
-        return math_reward.compute_score
+        return math.compute_score
     else:
         raise NotImplementedError
 
@@ -96,13 +94,10 @@ class RewardManager:
 def main(config):
     if not ray.is_initialized():
         # this is for local ray cluster
-        default_runtime_env = {"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}}
-        ray_init_kwargs = config.ray_kwargs.get("ray_init", {})
-        runtime_env_kwargs = ray_init_kwargs.get("runtime_env", {})
-        runtime_env = OmegaConf.merge(default_runtime_env, runtime_env_kwargs)
-        ray_init_kwargs = OmegaConf.create({**ray_init_kwargs, "runtime_env": runtime_env})
-        print(f"ray init kwargs: {ray_init_kwargs}")
-        ray.init(**OmegaConf.to_container(ray_init_kwargs))
+        ray.init(
+            runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN"}},
+            num_cpus=config.ray_init.num_cpus,
+        )
 
     ray.get(main_task.remote(config))
 
@@ -128,8 +123,8 @@ def main_task(config):
     tokenizer = hf_tokenizer(local_path)
 
     # define worker classes
-    if config.actor_rollout_ref.actor.strategy in {"fsdp", "fsdp2"}:
-        assert config.critic.strategy in {"fsdp", "fsdp2"}
+    if config.actor_rollout_ref.actor.strategy == "fsdp":
+        assert config.actor_rollout_ref.actor.strategy == config.critic.strategy
         from verl.single_controller.ray import RayWorkerGroup
         from verl.workers.fsdp_workers import ActorRolloutRefWorker, CriticWorker
 
@@ -137,10 +132,10 @@ def main_task(config):
 
     elif config.actor_rollout_ref.actor.strategy == "megatron":
         assert config.actor_rollout_ref.actor.strategy == config.critic.strategy
-        from verl.single_controller.ray import RayWorkerGroup
+        from verl.single_controller.ray.megatron import NVMegatronRayWorkerGroup
         from verl.workers.megatron_workers import ActorRolloutRefWorker, CriticWorker
 
-        ray_worker_group_cls = RayWorkerGroup
+        ray_worker_group_cls = NVMegatronRayWorkerGroup
 
     else:
         raise NotImplementedError
@@ -172,9 +167,25 @@ def main_task(config):
     }
 
     # use reference model
-    if need_reference_policy(config):
+    if config.algorithm.use_kl_in_reward or config.actor_rollout_ref.actor.use_kl_loss:
         role_worker_mapping[Role.RefPolicy] = ray.remote(ActorRolloutRefWorker)
         mapping[Role.RefPolicy] = actor_rollout_ref_pool_id
+
+    # we should adopt a multi-source reward function here
+    # - for rule-based rm, we directly call a reward score
+    # - for model-based rm, we call a model
+    # - for code related prompt, we send to a sandbox if there are test cases
+    # - finally, we combine all the rewards together
+    # - The reward type depends on the tag of the data
+    if config.reward_model.enable:
+        if config.reward_model.strategy == "fsdp":
+            from verl.workers.fsdp_workers import RewardModelWorker
+        elif config.reward_model.strategy == "megatron":
+            from verl.workers.megatron_workers import RewardModelWorker
+        else:
+            raise NotImplementedError
+        role_worker_mapping[Role.RewardModel] = ray.remote(RewardModelWorker)
+        mapping[Role.RewardModel] = critic_pool_id
 
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0)
 
@@ -192,6 +203,7 @@ def main_task(config):
         ray_worker_group_cls=ray_worker_group_cls,
         reward_fn=reward_fn,
         val_reward_fn=val_reward_fn,
+        device_name=config.trainer.device,
     )
     trainer.init_workers()
     trainer.fit()

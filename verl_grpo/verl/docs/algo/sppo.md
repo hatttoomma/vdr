@@ -1,7 +1,5 @@
 # Recipe: Self-Play Preference Optimization (SPPO)
 
-Last updated: 05/28/2025.
-
 verl provides a community recipe implementation for the paper [Self-Play Preference Optimization for Language Model Alignment](https://arxiv.org/abs/2405.00675). SPPO can significantly enhance the performance of an LLM without strong external signals such as responses or preferences from GPT-4. It can outperform the model trained with iterative direct preference optimization (DPO), among other methods. SPPO is theoretically grounded, ensuring that the LLM can converge to the von Neumann winner (i.e., Nash equilibrium) under general, potentially intransitive preference, and empirically validated through extensive evaluations on multiple datasets.
 
 Paper Authors: [Yue Wu](https://yuewu.us/)\*, [Zhiqing Sun](https://www.cs.cmu.edu/~zhiqings/)\*, [Huizhuo Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Kaixuan Ji](https://scholar.google.com/citations?user=FOoKDukAAAAJ), [Yiming Yang](https://www.cs.cmu.edu/~yiming/), [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
@@ -22,7 +20,7 @@ python3 -m uv pip install -e ".[sglang]"
 export WANDB_API_KEY=<YOUR_WANDB_API_KEY>
 
 python3 examples/data_preprocess/math_dataset.py --local_dir ~/data/math
-hf download Qwen/Qwen2.5-7B-Instruct --local-dir $HOME/models/Qwen2.5-7B-Instruct
+huggingface-cli download Qwen/Qwen2.5-7B-Instruct --local-dir $HOME/models/Qwen2.5-7B-Instruct
 
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 bash recipe/sppo/run_qwen2.5-7b_rm.sh

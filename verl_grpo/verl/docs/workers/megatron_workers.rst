@@ -1,8 +1,6 @@
 Megatron-LM Backend
 ===================
 
-Last updated: 12/01/2025.
-
 We support Megatron Backend by implementing various workers for actor,
 critic, reference, rollout and reward models. We also implement the
 ``3DHybridEngine`` using Megatron-LM and vLLM/SGLang in
@@ -121,6 +119,8 @@ highlighted below:
 2. ``vLLMRollout`` support generation with vLLM. We modify the vLLM
    Engine and make it executed under SPMD to fit into our
    ``WorkerGroup`` design.
+3. ``MegatronVLLMShardingManager`` a context manager to perform actual
+   resharding between actor and rollout.
 
 See `source code <https://github.com/volcengine/verl/blob/main/verl/workers/megatron_workers.py#L63>`_ for more information.
 
@@ -141,6 +141,11 @@ See `source code <https://github.com/volcengine/verl/blob/main/verl/workers/mega
                         tokenizer=self.tokenizer,
                         model_hf_config=self.actor_model_config,
                         train_tp=mpu.get_tensor_model_parallel_world_size())
+   # perform weight resharding between actor and rollout
+   sharding_manager = MegatronVLLMShardingManager(module=self.hybrid_engine,
+                                                  inference_engine=rollout.inference_engine,
+                                                  model_config=self.actor_model_config,
+                                                  layer_name_mapping=layer_name_mapping)
    ...
 
 1. Generate sequence and recompute log prob
@@ -267,6 +272,27 @@ For the critic, you can include these parameters.
    critic.megatron.param_offload=True \
    critic.megatron.grad_offload=True \
    critic.megatron.optimizer_offload=True \
+
+Profiler
+^^^^^^^^
+
+The profiler is a tool that helps you understand the performance of your 
+model. It can be used to profile the time spent on different operations 
+and identify the bottlenecks. You can get more information from 
+`torch.profiler <https://pytorch.org/docs/stable/profiler.html>`_.
+
+In verl, now the profiler is only support for the actor role In Megatron. You can set 
+the begin step and end step to profile. Notice, one step means one gradient update. And 
+the profile result will be saved in the save_path. If you just want to profile in the 
+specific rank, you can set the profile_ranks, by default, it will be [0].
+
+.. code:: python
+
+   actor_rollout_ref.actor.profile.use_profiler=True \
+   actor_rollout_ref.actor.profile.profile_ranks=[0] \
+   actor_rollout_ref.actor.profile.begin_step=0 \
+   actor_rollout_ref.actor.profile.end_step=1 \
+   actor_rollout_ref.actor.profile.save_path="./profile"
 
 
 Related MCore Document

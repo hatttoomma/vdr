@@ -9,8 +9,10 @@ train_files="['$gsm8k_train_path', '$math_train_path']"
 test_files="['$gsm8k_test_path', '$math_test_path']"
 
 # For async rollout mode, dataset should return raw chat.
-rollout_mode="async"
-return_raw_chat="True"
+rollout_mode="sync"
+if [ "$rollout_mode" = "async" ]; then
+    return_raw_chat="True"
+fi
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=gae \
@@ -47,7 +49,7 @@ python3 -m verl.trainer.main_ppo \
     critic.model.fsdp_config.optimizer_offload=False \
     algorithm.use_kl_in_reward=False \
     trainer.critic_warmup=0 \
-    trainer.logger='["console","wandb"]' \
+    trainer.logger=['console','wandb'] \
     trainer.project_name='verl_example_gsm8k' \
     trainer.experiment_name='qwen2-7b_function_rm_bsz8k_p4k_r4k_seq_packing' \
     trainer.n_gpus_per_node=8 \

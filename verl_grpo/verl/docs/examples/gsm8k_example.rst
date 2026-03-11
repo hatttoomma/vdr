@@ -1,8 +1,6 @@
 GSM8K Example
 =============
 
-Last updated: 03/25/2025.
-
 Introduction
 ------------
 
@@ -10,7 +8,7 @@ In this example, we train an LLM to tackle the GSM8k task.
 
 Paper: https://arxiv.org/pdf/2110.14168
 
-Dataset: https://huggingface.co/datasets/openai/gsm8k
+Dataset: https://huggingface.co/datasets/gsm8k
 
 Note that the original paper mainly focuses on training a verifier (a
 reward model) to solve math problems via Best-of-N sampling. In this
@@ -46,7 +44,7 @@ Step 1: Prepare dataset
 .. code:: bash
 
    cd examples/data_preprocess
-   python3 gsm8k.py --local_save_dir ~/data/gsm8k
+   python3 gsm8k.py --local_dir ~/data/gsm8k
 
 Step 2: Download Model
 ----------------------
@@ -57,7 +55,7 @@ There're three ways to prepare the model checkpoints for post-training:
 
 .. code:: bash
 
-   hf download deepseek-ai/deepseek-math-7b-instruct --local-dir ~/models/deepseek-math-7b-instruct --local-dir-use-symlinks False
+   huggingface-cli download deepseek-ai/deepseek-math-7b-instruct --local-dir ~/models/deepseek-math-7b-instruct --local-dir-use-symlinks False
    # or
    modelscope download --model deepseek-ai/deepseek-math-7b-instruct --local_dir ~/models/deepseek-math-7b-instruct
 
@@ -75,7 +73,7 @@ model.
 ---------------------------------
 
 We provide a SFT Trainer using PyTorch FSDP in
-`sft_trainer.py <https://github.com/volcengine/verl/blob/main/verl/trainer/sft_trainer.py>`_. 
+`fsdp_sft_trainer.py <https://github.com/volcengine/verl/blob/main/verl/trainer/fsdp_sft_trainer.py>`_. 
 Users can customize their own SFT
 script using our FSDP SFT Trainer.
 
@@ -85,17 +83,18 @@ We also provide various training scripts for SFT on GSM8K dataset in `gsm8k sft 
 
    set -x
 
-   torchrun -m verl.trainer.sft_trainer \
+   torchrun -m verl.trainer.fsdp_sft_trainer \
        data.train_files=$HOME/data/gsm8k/train.parquet \
        data.val_files=$HOME/data/gsm8k/test.parquet \
        data.prompt_key=question \
        data.response_key=answer \
        data.micro_batch_size_per_gpu=8 \
        model.partial_pretrain=deepseek-ai/deepseek-coder-6.7b-instruct \
+       trainer.default_hdfs_dir=hdfs://user/verl/experiments/gsm8k/deepseek-coder-6.7b-instruct/ \
        trainer.project_name=gsm8k-sft \
        trainer.experiment_name=gsm8k-sft-deepseek-coder-6.7b-instruct \
        trainer.total_epochs=4 \
-       trainer.logger='["console","wandb"]'
+       trainer.logger=['console','wandb']
 
 
 If you use AMD GPUs (ROCm kernel), you need to add the following environment variables into the run script:
@@ -169,7 +168,7 @@ The script of run_deepseek7b_llm.sh
       critic.model.fsdp_config.optimizer_offload=False \
       algorithm.kl_ctrl.kl_coef=0.001 \
       trainer.critic_warmup=0 \
-      trainer.logger='["console","wandb"]' \
+      trainer.logger=['console','wandb'] \
       trainer.project_name='verl_example_gsm8k' \
       trainer.experiment_name='deepseek_llm_7b_function_rm' \
       trainer.n_gpus_per_node=8 \
