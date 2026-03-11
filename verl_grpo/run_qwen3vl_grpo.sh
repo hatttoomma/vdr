@@ -7,19 +7,21 @@ TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
 VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.5}
-ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-2200}
-ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-2200}
-ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-True}
+MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-3072}
+MAX_RESPONSE_LENGTH=${MAX_RESPONSE_LENGTH:-64}
+ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-3136}
+ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-3136}
+ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-False}
 
 python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
   data.train_batch_size=1 \
-  data.max_prompt_length=2048 \
-  data.max_response_length=64 \
+  data.max_prompt_length="${MAX_PROMPT_LENGTH}" \
+  data.max_response_length="${MAX_RESPONSE_LENGTH}" \
   data.filter_overlong_prompts=True \
-  data.truncation=right \
+  data.truncation=error \
   data.image_key=images \
   actor_rollout_ref.model.path="${MODEL_PATH}" \
   actor_rollout_ref.actor.optim.lr=1e-6 \
