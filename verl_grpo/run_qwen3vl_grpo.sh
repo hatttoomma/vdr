@@ -15,7 +15,7 @@ python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=1 \
+  data.train_batch_size=2 \
   data.max_prompt_length=8192 \
   data.max_response_length=512 \
   data.filter_overlong_prompts=True \
@@ -44,7 +44,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.logger='["console"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
-  trainer.n_gpus_per_node=1 \
+  trainer.n_gpus_per_node=2 \
   trainer.nnodes=1 \
   trainer.save_freq=20 \
   trainer.test_freq=10 \
