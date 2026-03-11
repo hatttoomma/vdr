@@ -133,9 +133,6 @@ def to_resized_pil_image(x: Any, max_size: int = MAX_IMAGE_SIZE):
 
 def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
     query = safe_get(example, "query", "").strip()
-    area = safe_get(example, "area", "")
-    subfield = safe_get(example, "subfield", "")
-    timestamp = safe_get(example, "timestamp", "")
 
     lines = [
         "You are a helpful multimodal assistant.",
@@ -145,17 +142,6 @@ def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
         "",
         f"Question: {query}",
     ]
-
-    meta_lines = []
-    if area:
-        meta_lines.append(f"Area: {area}")
-    if subfield:
-        meta_lines.append(f"Subfield: {subfield}")
-    if timestamp:
-        meta_lines.append(f"Date: {timestamp}")
-    if meta_lines:
-        lines.extend(["", "Context metadata:"])
-        lines.extend(meta_lines)
 
     lines.extend([
         "",
@@ -203,7 +189,6 @@ def make_map_fn(subset: str, use_image_field: str):
                 "subfield": safe_get(example, "subfield", ""),
                 "timestamp": safe_get(example, "timestamp", ""),
                 "gt_requery": gt_requery,
-                "image_field_used": use_image_field,
             },
             "responses": [gt_answer] if gt_answer else [],
             "question": safe_get(example, "query", ""),
