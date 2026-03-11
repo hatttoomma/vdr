@@ -6,9 +6,9 @@ ENGINE=${1:-vllm}
 TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
 VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
-GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.65}
-ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-9216}
-ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-9216}
+GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.5}
+ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-2200}
+ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-2200}
 ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-True}
 
 python3 -m verl.trainer.main_ppo \
@@ -16,8 +16,8 @@ python3 -m verl.trainer.main_ppo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
   data.train_batch_size=1 \
-  data.max_prompt_length=8192 \
-  data.max_response_length=512 \
+  data.max_prompt_length=2048 \
+  data.max_response_length=64 \
   data.filter_overlong_prompts=True \
   data.truncation=error \
   data.image_key=images \
@@ -38,10 +38,10 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
   +actor_rollout_ref.rollout.engine_kwargs.vllm.kv_cache_dtype=fp8 \
-  +actor_rollout_ref.actor.fsdp_config.param_offload=True \
+  actor_rollout_ref.actor.fsdp_config.param_offload=True \
   +actor_rollout_ref.actor.fsdp_config.grad_offload=True \
-  +actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
-  +actor_rollout_ref.model.enable_activation_offload=True \
+  actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
+  actor_rollout_ref.model.enable_activation_offload=True \
   custom_reward_function.path="$(pwd)/verl_grpo/reward_vdr.py" \
   custom_reward_function.name=compute_score \
   algorithm.use_kl_in_reward=False \
