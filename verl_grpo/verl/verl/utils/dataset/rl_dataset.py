@@ -138,45 +138,9 @@ class RLHFDataset(Dataset):
         # filter out too long prompts
         if self.filter_overlong_prompts:
             tokenizer = self.tokenizer
-            processor = self.processor
             prompt_key = self.prompt_key
-            image_key = self.image_key
-            video_key = self.video_key
-
-            if processor is not None:
-                from verl.utils.dataset.vision_utils import process_image, process_video
-
-                def doc2len(doc) -> int:
-                    try:
-                        raw_prompt = processor.apply_chat_template(
-                            doc[prompt_key], add_generation_prompt=True, tokenize=False
-                        )
-                        images = None
-                        if image_key in doc and doc[image_key]:
-                            images = [process_image(image) for image in doc[image_key]]
-
-                        videos = None
-                        if video_key in doc and doc[video_key]:
-                            videos = [process_video(video) for video in doc[video_key]]
-
-                        model_inputs = processor(text=[raw_prompt], images=images, videos=videos, return_tensors="pt")
-                        return int(model_inputs["input_ids"].shape[-1])
-                    except Exception as e:
-                        logger.warning("Failed to preprocess a sample while filtering; dropping it. error=%s", e)
-                        return self.max_prompt_length + 1
-
-            else:
-
-                def doc2len(doc) -> int:
-                    try:
-                        raw_prompt = tokenizer.apply_chat_template(doc[prompt_key], add_generation_prompt=True, tokenize=False)
-                        return len(tokenizer(raw_prompt, add_special_tokens=False)["input_ids"])
-                    except Exception as e:
-                        logger.warning("Failed to preprocess a sample while filtering; dropping it. error=%s", e)
-                        return self.max_prompt_length + 1
-
             self.dataframe = self.dataframe.filter(
-                lambda doc: doc2len(doc) <= self.max_prompt_length,
+                lambda doc: len(tokenizer.apply_chat_template(doc[prompt_key], add_generation_prompt=True)) <= self.max_prompt_length,
                 num_proc=self.num_workers,
                 desc=f"Filtering prompts longer than {self.max_prompt_length} tokens",
             )
