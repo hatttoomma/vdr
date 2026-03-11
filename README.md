@@ -18,5 +18,7 @@
 
 TODO list:
 support tool calling workflow
-support TTRL training
+support TTRL training:
+1. implement VLM GRPO using verl
+2. modify reward to majority vote and modify training data to unlabled data
 add image crop tools        

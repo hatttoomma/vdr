@@ -10,10 +10,10 @@ system_prompt:
     # TOOL USAGE FORMAT:
 
     When you decide to use a tool, you MUST use the following format:
-    <tool>\n{"name": tool_name, "args": tool_args}\n</tool>
+    <tool>{"name": tool_name, "args": tool_args}</tool>
 
     For example:
-    <tool>\n{"name": "web_search", "args": {"query": "What is the capital of France?"}}\n</tool>
+    <tool>{"name": "web_search", "args": {"query": "What is the capital of France?"}}</tool>
 
     # INSTRUCTIONS:
     
@@ -28,6 +28,7 @@ system_prompt:
     - Always explain your detailed reasoning process before using any tool.
     - You can ONLY call one tool at one turn! Do not call multiple tools in one turn!
     - You MUST provide your final answer using complete <answer>...</answer> tags!
+    - The content inside <answer>...</answer> must be ONLY the bare answer (noun, verb, name, or number). No sentences, no reasoning, no restating the question.
 
   web_search_and_image_search: |
 
@@ -56,8 +57,19 @@ system_prompt:
     4. Iterate as needed: Continue reasoning and using tools in next turns until you are confident in your findings.
     5. Answer: Once confident, provide the final answer inside <answer>...</answer> tags!
 
+    # ANSWER FORMAT:
+
+    Your final answer inside <answer>...</answer> MUST be ONLY the direct short answer — a single word, name, number, or short phrase. Do NOT repeat the question, do NOT include explanations, do NOT write a full sentence. Just the answer itself.
+
+    Examples:
+    - Question: "What breed is this dog?" → <answer>Golden Retriever</answer>
+    - Question: "What action is the person performing?" → <answer>surfing</answer>
+    - Question: "How many chairs are in the image?" → <answer>3</answer>
+    - Question: "What is the name of this landmark?" → <answer>Eiffel Tower</answer>
+
     # IMPORTANT:
     
     - Always explain your detailed reasoning process before using any tool.
     - You can ONLY call one tool at one turn! Do not call multiple tools in one turn!
     - You MUST provide your final answer using complete <answer>...</answer> tags!
+    - The content inside <answer>...</answer> must be ONLY the bare answer (noun, verb, name, or number). No sentences, no reasoning, no restating the question.
