@@ -7,10 +7,10 @@ TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/val.parquet"}
 VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.5}
-MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-3072}
+MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-1024}
 MAX_RESPONSE_LENGTH=${MAX_RESPONSE_LENGTH:-64}
-ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-3136}
-ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-3136}
+ROLLOUT_MAX_MODEL_LEN=${ROLLOUT_MAX_MODEL_LEN:-1088}
+ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-1088}
 ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-False}
 ROLLOUT_N_PER_ITER=${ROLLOUT_N_PER_ITER:-1}
 LORA_RANK=${LORA_RANK:-8}
@@ -18,12 +18,14 @@ LORA_ALPHA=${LORA_ALPHA:-8}
 LORA_TARGET_MODULES=${LORA_TARGET_MODULES:-"[q_proj,k_proj,v_proj,o_proj]"}
 ROLLOUT_LOAD_FORMAT=${ROLLOUT_LOAD_FORMAT:-safetensors}
 VLLM_ATTENTION_BACKEND=FLASHINFER
+# FIXME: set per gpu batch size = 1
+NUM_GPUS=4
 
 python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=2 \
+  data.train_batch_size=$NUM_GPUS \
   data.max_prompt_length="${MAX_PROMPT_LENGTH}" \
   data.max_response_length="${MAX_RESPONSE_LENGTH}" \
   data.filter_overlong_prompts=True \
@@ -35,7 +37,7 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
   actor_rollout_ref.model.target_modules="${LORA_TARGET_MODULES}" \
-  actor_rollout_ref.actor.ppo_mini_batch_size=2 \
+  actor_rollout_ref.actor.ppo_mini_batch_size=$NUM_GPUS \
   actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.actor.use_kl_loss=True \
   actor_rollout_ref.actor.kl_loss_coef=0.001 \
@@ -66,7 +68,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.logger='["console"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
-  trainer.n_gpus_per_node=2 \
+  trainer.n_gpus_per_node=$NUM_GPUS \
   trainer.nnodes=1 \
   trainer.save_freq=100 \
   trainer.test_freq=10 \
