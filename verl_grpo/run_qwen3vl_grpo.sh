@@ -69,5 +69,5 @@ python3 -m verl.trainer.main_ppo \
   trainer.save_freq=100 \
   trainer.test_freq=2 \
   trainer.total_epochs=20 \
-  +trainer.validation_log_path=${VALIDATION_LOG_PATH} \
+  +trainer.validation_log_path="${VALIDATION_LOG_PATH}" \
   "$@"
