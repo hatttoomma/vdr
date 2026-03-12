@@ -14,14 +14,14 @@ ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-3136}
 ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-False}
 LORA_RANK=${LORA_RANK:-8}
 LORA_ALPHA=${LORA_ALPHA:-8}
-LORA_TARGET_MODULES=${LORA_TARGET_MODULES:-"[q_proj,k_proj,v_proj,o_proj,gate_proj,up_proj,down_proj]"}
+LORA_TARGET_MODULES=${LORA_TARGET_MODULES:-"[q_proj,k_proj,v_proj,o_proj]"}
 ROLLOUT_LOAD_FORMAT=${ROLLOUT_LOAD_FORMAT:-safetensors}
 
 python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=1 \
+  data.train_batch_size=4 \
   data.max_prompt_length="${MAX_PROMPT_LENGTH}" \
   data.max_response_length="${MAX_RESPONSE_LENGTH}" \
   data.filter_overlong_prompts=True \
@@ -33,7 +33,7 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
   actor_rollout_ref.model.target_modules="${LORA_TARGET_MODULES}" \
-  actor_rollout_ref.actor.ppo_mini_batch_size=1 \
+  actor_rollout_ref.actor.ppo_mini_batch_size=4 \
   actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.actor.use_kl_loss=True \
   actor_rollout_ref.actor.kl_loss_coef=0.001 \
@@ -44,7 +44,7 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.max_num_batched_tokens="${ROLLOUT_MAX_NUM_BATCHED_TOKENS}" \
   actor_rollout_ref.rollout.enable_chunked_prefill="${ROLLOUT_ENABLE_CHUNKED_PREFILL}" \
   actor_rollout_ref.rollout.load_format="${ROLLOUT_LOAD_FORMAT}" \
-  actor_rollout_ref.rollout.n=1 \
+  actor_rollout_ref.rollout.n=4 \
   actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
   +actor_rollout_ref.rollout.engine_kwargs.vllm.kv_cache_dtype=fp8 \
@@ -59,7 +59,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.logger='["console"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
-  trainer.n_gpus_per_node=1 \
+  trainer.n_gpus_per_node=4 \
   trainer.nnodes=1 \
   trainer.save_freq=20 \
   trainer.test_freq=10 \
