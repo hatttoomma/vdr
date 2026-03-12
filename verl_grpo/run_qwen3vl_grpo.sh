@@ -32,12 +32,12 @@ python3 -m verl.trainer.main_ppo \
   data.truncation=error \
   data.image_key=images \
   actor_rollout_ref.model.path="${MODEL_PATH}" \
-  actor_rollout_ref.actor.optim.lr=1e-5 \
+  actor_rollout_ref.actor.optim.lr=1e-4 \
   actor_rollout_ref.model.enable_gradient_checkpointing=True \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
   actor_rollout_ref.model.target_modules="${LORA_TARGET_MODULES}" \
-  actor_rollout_ref.actor.ppo_mini_batch_size=$NUM_GPUS \
+  actor_rollout_ref.actor.ppo_mini_batch_size=($NUM_GPUS * 2) \
   actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.actor.use_kl_loss=True \
   actor_rollout_ref.actor.kl_loss_coef=0.001 \
