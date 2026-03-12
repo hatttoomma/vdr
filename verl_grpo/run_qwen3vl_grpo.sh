@@ -19,7 +19,7 @@ LORA_TARGET_MODULES=${LORA_TARGET_MODULES:-"[q_proj,k_proj,v_proj,o_proj]"}
 ROLLOUT_LOAD_FORMAT=${ROLLOUT_LOAD_FORMAT:-safetensors}
 VLLM_ATTENTION_BACKEND=FLASHINFER
 # FIXME: set per gpu batch size = 1
-NUM_GPUS=4
+NUM_GPUS=2
 
 python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
