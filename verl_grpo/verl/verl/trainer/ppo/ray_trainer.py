@@ -23,6 +23,7 @@ import os
 import uuid
 from collections import defaultdict
 from copy import deepcopy
+from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 from pprint import pprint
@@ -581,6 +582,61 @@ class RayPPOTrainer:
         # Log to each configured logger
         self.validation_generations_logger.log(self.config.trainer.logger, samples, self.global_steps)
 
+    def _to_jsonable(self, value):
+        """Convert nested values to JSON-serializable Python primitives."""
+        if isinstance(value, np.generic):
+            return value.item()
+        if isinstance(value, np.ndarray):
+            return [self._to_jsonable(v) for v in value.tolist()]
+        if isinstance(value, torch.Tensor):
+            return self._to_jsonable(value.detach().cpu().tolist())
+        if isinstance(value, dict):
+            return {str(k): self._to_jsonable(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [self._to_jsonable(v) for v in value]
+        if value is None or isinstance(value, (str, int, float, bool)):
+            return value
+        return str(value)
+
+    def _build_validation_records(self, batch: DataProto, inputs: list[str], outputs: list[str], scores: list[float]) -> list[dict]:
+        """Build per-sample validation records for file logging."""
+        if len(inputs) != len(outputs) or len(outputs) != len(scores):
+            raise ValueError(f"Validation record length mismatch: inputs={len(inputs)}, outputs={len(outputs)}, scores={len(scores)}")
+
+        sample_cnt = len(outputs)
+        records = []
+        for i in range(sample_cnt):
+            sample_info = {}
+            for key, values in batch.non_tensor_batch.items():
+                if len(values) == sample_cnt:
+                    sample_info[key] = self._to_jsonable(values[i])
+
+            record = {
+                "step": self.global_steps,
+                "validation_time": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                "model_input": inputs[i],
+                "model_answer": outputs[i],
+                "score": scores[i],
+                "validation_sample": sample_info,
+            }
+            records.append(record)
+        return records
+
+    def _append_validation_log(self, records: list[dict], log_path: str):
+        """Append validation records to a single JSONL file."""
+        if not records:
+            return
+
+        log_dir = os.path.dirname(log_path)
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+
+        with open(log_path, "a", encoding="utf-8") as f:
+            for record in records:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+        print(f"Appended {len(records)} validation records to {log_path}")
+
     def _validate(self):
         data_source_lst = []
         reward_extra_infos_dict: dict[str, list] = defaultdict(list)
@@ -653,6 +709,11 @@ class RayPPOTrainer:
             reward_tensor = result["reward_tensor"]
             scores = reward_tensor.sum(-1).cpu().tolist()
             sample_scores.extend(scores)
+
+            validation_log_path = self.config.trainer.get("validation_log_path", None)
+            if validation_log_path:
+                records = self._build_validation_records(test_batch, input_texts, output_texts, scores)
+                self._append_validation_log(records=records, log_path=validation_log_path)
 
             reward_extra_infos_dict["reward"].extend(scores)
             if "reward_extra_info" in result:

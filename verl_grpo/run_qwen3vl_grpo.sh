@@ -14,6 +14,7 @@ ROLLOUT_MAX_NUM_BATCHED_TOKENS=${ROLLOUT_MAX_NUM_BATCHED_TOKENS:-2048}
 ROLLOUT_ENABLE_CHUNKED_PREFILL=${ROLLOUT_ENABLE_CHUNKED_PREFILL:-False}
 ROLLOUT_N_PER_ITER=${ROLLOUT_N_PER_ITER:-1}
 ROLLOUT_LOAD_FORMAT=${ROLLOUT_LOAD_FORMAT:-safetensors}
+VALIDATION_LOG_PATH=${VALIDATION_LOG_PATH:./debug/log}
 VLLM_ATTENTION_BACKEND=FLASHINFER
 # FIXME: set per gpu batch size = 1
 NUM_GPUS=2
@@ -68,4 +69,5 @@ python3 -m verl.trainer.main_ppo \
   trainer.save_freq=100 \
   trainer.test_freq=2 \
   trainer.total_epochs=20 \
+  +trainer.validation_log_path=${VALIDATION_LOG_PATH} \
   "$@"
