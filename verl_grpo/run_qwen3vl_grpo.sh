@@ -57,8 +57,8 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.model.enable_activation_offload=True \
   custom_reward_function.path="$(pwd)/verl_grpo/reward_vdr.py" \
   custom_reward_function.name=compute_score \
-  custom_reward_function_val.path="$(pwd)/verl_grpo/reward_vdr.py" \
-  custom_reward_function_val.name=compute_score_ground_truth \
+  +custom_reward_function_val.path="$(pwd)/verl_grpo/reward_vdr.py" \
+  +custom_reward_function_val.name=compute_score_ground_truth \
   reward_model.reward_manager=batch \
   algorithm.use_kl_in_reward=False \
   trainer.critic_warmup=0 \
