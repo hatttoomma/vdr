@@ -148,7 +148,7 @@ def try_load_split(dataset_name: str, split: str) -> Dataset:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_name", type=str, required=True)
+    parser.add_argument("--dataset_name", type=str, default="simplevqa")
     parser.add_argument("--split", type=str, default="test")
     parser.add_argument("--output_dir", type=str, default="./simplevqa_data")
     parser.add_argument("--val_size", type=int, default=20)
