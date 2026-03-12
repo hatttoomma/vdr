@@ -323,8 +323,12 @@ class AsyncDoubleBufferGroupOffloadHandler(SynchronizedGroupOffloadHandler):
             self.bulk_offload_group(current_group)
 
         # Window map data structure helps us synchronize based on number
-        # of layers offloaded
-        if self.layer_window_map[self.offloaded_group_count] == current_group:
+        # of layers offloaded. Guard against out-of-range counters to avoid
+        # runtime key errors in edge-case execution paths.
+        if self.offloaded_group_count >= self.num_offload_group:
+            return
+        expected_group = self.layer_window_map.get(self.offloaded_group_count, None)
+        if expected_group == current_group:
             # Stream synchronization both ways
             self.d2h_stream.wait_stream(get_torch_device().current_stream())
             get_torch_device().current_stream().wait_stream(self.d2h_stream)
@@ -374,8 +378,13 @@ class AsyncDoubleBufferGroupOffloadHandler(SynchronizedGroupOffloadHandler):
         self.current_group -= 1
         assert self.current_group >= 0
 
-        # Layer window data structure helps us to reload at right times
-        if self.layer_window_map[self.offloaded_group_count - 1] == self.current_group:
+        # Layer window data structure helps us to reload at right times.
+        # offloaded_group_count can be zero (or unexpectedly out of range) in
+        # some interleavings; skip map access when there's nothing to reload.
+        expected_group = None
+        if self.offloaded_group_count > 0:
+            expected_group = self.layer_window_map.get(self.offloaded_group_count - 1, None)
+        if expected_group == self.current_group:
             # Stream synchronization both ways
             self.h2d_stream.wait_stream(get_torch_device().current_stream())
             get_torch_device().current_stream().wait_stream(self.h2d_stream)
