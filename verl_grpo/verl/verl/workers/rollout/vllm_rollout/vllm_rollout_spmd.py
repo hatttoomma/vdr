@@ -283,39 +283,52 @@ class vLLMRollout(BaseRollout):
 
         # users can customize different sampling_params at different run
         with self.update_sampling_params(**kwargs):
-            outputs = self.inference_engine.generate(
-                prompts=vllm_inputs,  # because we have already convert it to prompt token id
-                sampling_params=self.sampling_params,
-                lora_request=lora_requests,
-                use_tqdm=False,
-            )
+            target_n = int(getattr(self.sampling_params, "n", 1))
+            n_per_iter = int(self.config.get("n_per_iter", target_n))
+            n_per_iter = max(1, min(n_per_iter, target_n))
+
+            # Generate in chunks along sampling `n` to reduce peak memory usage.
+            responses_by_prompt = [[] for _ in range(batch_size)]
+            log_probs_by_prompt = [[] for _ in range(batch_size)]
+            remaining_n = target_n
+            while remaining_n > 0:
+                curr_n = min(remaining_n, n_per_iter)
+                with self.update_sampling_params(n=curr_n):
+                    outputs = self.inference_engine.generate(
+                        prompts=vllm_inputs,  # because we have already convert it to prompt token id
+                        sampling_params=self.sampling_params,
+                        lora_request=lora_requests,
+                        use_tqdm=False,
+                    )
+
+                for prompt_idx, output in enumerate(outputs):
+                    for sample in output.outputs:
+                        response_ids = sample.token_ids
+                        responses_by_prompt[prompt_idx].append(response_ids)
+                        curr_log_prob = []
+                        for i, logprob in enumerate(sample.logprobs):
+                            curr_log_prob.append(logprob[response_ids[i]].logprob)
+                        log_probs_by_prompt[prompt_idx].append(curr_log_prob)
+
+                remaining_n -= curr_n
 
             # TODO(sgm): disable logprob when recompute_log_prob is enable
             # if n = 1: (bs, response_length) ; if n > 1: (bs * n, response_length)
-
-            response = []
-            rollout_log_probs = []
-            for output in outputs:
-                for sample_id in range(len(output.outputs)):
-                    response_ids = output.outputs[sample_id].token_ids
-                    response.append(response_ids)
-                    curr_log_prob = []
-                    for i, logprob in enumerate(output.outputs[sample_id].logprobs):
-                        curr_log_prob.append(logprob[response_ids[i]].logprob)
-                    rollout_log_probs.append(curr_log_prob)
+            response = [seq for prompt_responses in responses_by_prompt for seq in prompt_responses]
+            rollout_log_probs = [seq for prompt_log_probs in log_probs_by_prompt for seq in prompt_log_probs]
 
             response = pad_2d_list_to_length(response, self.pad_token_id, max_length=self.config.response_length).to(idx.device)
             rollout_log_probs = pad_2d_list_to_length(rollout_log_probs, -1, max_length=self.config.response_length).to(idx.device)
             rollout_log_probs = rollout_log_probs.to(torch.float32)
 
-            if self.sampling_params.n > 1 and do_sample:
-                idx = _repeat_interleave(idx, self.sampling_params.n)
-                attention_mask = _repeat_interleave(attention_mask, self.sampling_params.n)
-                position_ids = _repeat_interleave(position_ids, self.sampling_params.n)
-                batch_size = batch_size * self.sampling_params.n
+            if target_n > 1 and do_sample:
+                idx = _repeat_interleave(idx, target_n)
+                attention_mask = _repeat_interleave(attention_mask, target_n)
+                position_ids = _repeat_interleave(position_ids, target_n)
+                batch_size = batch_size * target_n
                 # NOTE(linjunrong): for multi-turn https://github.com/volcengine/verl/pull/1037
                 if "tools_kwargs" in non_tensor_batch.keys():
-                    non_tensor_batch["tools_kwargs"] = _repeat_interleave(non_tensor_batch["tools_kwargs"], self.sampling_params.n)
+                    non_tensor_batch["tools_kwargs"] = _repeat_interleave(non_tensor_batch["tools_kwargs"], target_n)
 
             seq = torch.cat([idx, response], dim=-1)
 

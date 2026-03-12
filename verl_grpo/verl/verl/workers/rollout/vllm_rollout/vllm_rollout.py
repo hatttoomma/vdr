@@ -230,29 +230,48 @@ class vLLMRollout(BaseRollout):
                 lora_requests = [LoRARequest(lora_name=f"{lora_int_id}", lora_int_id=lora_int_id, lora_path="/simon-stub-path")] * batch_size
         # users can customize different sampling_params at different run
         with self.update_sampling_params(**kwargs):
-            output = self.inference_engine.generate(
-                prompts=None,  # because we have already convert it to prompt token id
-                sampling_params=self.sampling_params,
-                prompt_token_ids=idx_list,
-                lora_request=lora_requests,
-                use_tqdm=False,
-            )
+            target_n = int(getattr(self.sampling_params, "n", 1))
+            n_per_iter = int(self.config.get("n_per_iter", target_n))
+            n_per_iter = max(1, min(n_per_iter, target_n))
+
+            # Generate in chunks along sampling `n` to reduce peak memory usage.
+            response_chunks = []
+            log_prob_chunks = []
+            remaining_n = target_n
+            while remaining_n > 0:
+                curr_n = min(remaining_n, n_per_iter)
+                with self.update_sampling_params(n=curr_n):
+                    output = self.inference_engine.generate(
+                        prompts=None,  # because we have already convert it to prompt token id
+                        sampling_params=self.sampling_params,
+                        prompt_token_ids=idx_list,
+                        lora_request=lora_requests,
+                        use_tqdm=False,
+                    )
+
+                curr_response = output[0].to(idx.device)
+                curr_log_probs = output[1].to(idx.device)
+                curr_response = curr_response.view(batch_size, curr_n, -1)
+                curr_log_probs = curr_log_probs.view(batch_size, curr_n, -1)
+                response_chunks.append(curr_response)
+                log_prob_chunks.append(curr_log_probs)
+                remaining_n -= curr_n
 
             # TODO(sgm): disable logprob when recompute_log_prob is enable
             # if n = 1: (bs, response_length) ; if n > 1: (bs * n, response_length)
-            response = output[0].to(idx.device)
-            log_probs = output[1].to(idx.device)
+            response = torch.cat(response_chunks, dim=1).reshape(batch_size * target_n, -1)
+            log_probs = torch.cat(log_prob_chunks, dim=1).reshape(batch_size * target_n, -1)
 
             if response.shape[1] < self.config.response_length:
                 response = pad_sequence_to_length(response, self.config.response_length, self.pad_token_id)
                 log_probs = pad_sequence_to_length(log_probs, self.config.response_length, self.pad_token_id)
 
             # utilize current sampling params
-            if self.sampling_params.n > 1 and do_sample:
-                idx = idx.repeat_interleave(self.sampling_params.n, dim=0)
-                attention_mask = attention_mask.repeat_interleave(self.sampling_params.n, dim=0)
-                position_ids = position_ids.repeat_interleave(self.sampling_params.n, dim=0)
-                batch_size = batch_size * self.sampling_params.n
+            if target_n > 1 and do_sample:
+                idx = idx.repeat_interleave(target_n, dim=0)
+                attention_mask = attention_mask.repeat_interleave(target_n, dim=0)
+                position_ids = position_ids.repeat_interleave(target_n, dim=0)
+                batch_size = batch_size * target_n
             seq = torch.cat([idx, response], dim=-1)
 
         response_length = response.size(1)
