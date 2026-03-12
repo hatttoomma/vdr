@@ -24,7 +24,7 @@ OOM fix: limit context length by resizing iamge
 test: debug on realworldqa
 debug on mmsearch without tools
 2. modify reward to majority vote and modify training data to unlabled data
-debug on realworldqa
+debug on mmsearch without tools
 
 
 3. add image crop tools and code intepreter

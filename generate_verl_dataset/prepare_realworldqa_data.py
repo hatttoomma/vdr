@@ -31,7 +31,7 @@ def resize_to_max_pixels(image: Image.Image, max_pixels: int) -> Image.Image:
 
 
 def build_prompt(question: str) -> list[dict[str, str]]:
-    return [{"role": "user", "content": question}]
+    return [{"role": "user", "content": f"<image>\n{question}"}]
 
 
 def make_map_fn(data_source: str, split: str, max_pixels: int):
