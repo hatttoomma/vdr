@@ -8,7 +8,7 @@ def _extract_answer(text: str) -> str:
     match = re.search(r"<answer>(.*?)</answer>", text, flags=re.IGNORECASE | re.DOTALL)
     if match:
         return match.group(1).strip()
-    return text.strip()
+    return ""
 
 
 def _normalize(text: str) -> str:
