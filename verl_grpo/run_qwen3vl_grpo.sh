@@ -29,7 +29,7 @@ python3 -m verl.trainer.main_ppo \
   data.truncation=error \
   data.image_key=images \
   actor_rollout_ref.model.path="${MODEL_PATH}" \
-  actor_rollout_ref.actor.optim.lr=1e-1 \
+  actor_rollout_ref.actor.optim.lr=1e-5 \
   actor_rollout_ref.model.enable_gradient_checkpointing=True \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
