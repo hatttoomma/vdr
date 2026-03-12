@@ -181,7 +181,6 @@ def main() -> None:
     print(f"Loading model: {args.model_name}")
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         args.model_name,
-        dtype="auto",
         device_map="auto",
     )
     processor = AutoProcessor.from_pretrained(args.model_name)
