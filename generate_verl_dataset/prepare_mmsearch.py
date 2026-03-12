@@ -132,11 +132,10 @@ def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
 
     lines = [
         "<image>",
-        f"Question: {query}",
+        f"{query}",
     ]
 
     lines.extend([
-        "",
         "Think step by step and provide your final answer in <answer>...</answer>"
     ])
 
