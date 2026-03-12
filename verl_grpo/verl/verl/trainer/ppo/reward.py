@@ -22,11 +22,11 @@ from verl import DataProto
 from verl.utils.reward_score import default_compute_score
 
 
-def get_custom_reward_fn(config):
+def get_custom_reward_fn(config, config_key="custom_reward_function"):
     import importlib.util
     import sys
 
-    reward_fn_config = config.get("custom_reward_function") or {}
+    reward_fn_config = config.get(config_key) or {}
     file_path = reward_fn_config.get("path")
     if not file_path:
         return None
@@ -57,7 +57,7 @@ def get_custom_reward_fn(config):
     return wrapped_fn
 
 
-def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
+def load_reward_manager(config, tokenizer, num_examine, for_validation=False, **reward_kwargs):
     """
     Load and initialize a reward manager based on the configuration.
 
@@ -84,7 +84,11 @@ def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
     reward_manager_cls = get_reward_manager_cls(reward_manager_name)
 
     # Try to get a custom reward function based on the configuration
-    compute_score = get_custom_reward_fn(config)
+    custom_reward_key = "custom_reward_function_val" if for_validation else "custom_reward_function"
+    compute_score = get_custom_reward_fn(config, config_key=custom_reward_key)
+    if compute_score is None and for_validation:
+        # Fallback to training reward function if validation-specific one is not provided.
+        compute_score = get_custom_reward_fn(config, config_key="custom_reward_function")
     final_compute_score = compute_score
 
     if compute_score is None:
