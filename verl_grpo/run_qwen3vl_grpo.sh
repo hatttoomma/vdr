@@ -3,7 +3,7 @@ set -euo pipefail
 set -x
 
 ENGINE=${1:-vllm}
-TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
+TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/val.parquet"}
 VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.5}
@@ -63,5 +63,5 @@ python3 -m verl.trainer.main_ppo \
   trainer.nnodes=1 \
   trainer.save_freq=20 \
   trainer.test_freq=10 \
-  trainer.total_epochs=1 \
+  trainer.total_epochs=10 \
   "$@"
