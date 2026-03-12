@@ -28,3 +28,12 @@ debug on mmsearch without tools
 
 
 3. add image crop tools and code intepreter
+
+
+conda create -n mmsearch_r1 python==3.10 -y
+conda activate mmsearch_r1
+pip3 install -e verl_grpo/verl
+pip3 install vllm==0.8.2
+pip3 install transformers==4.51.0
+pip3 install flash-attn==2.7.4.post1 --no-build-isolation
+pip install ray==2.43.0

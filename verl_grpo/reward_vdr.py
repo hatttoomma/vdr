@@ -51,7 +51,10 @@ def compute_score(
 ) -> float | list[float]:
     # Training reward: use majority vote in each rollout group as pseudo label.
     preds = [_normalize(_extract_answer(s or "")) for s in solution_strs]
-    group_keys = [str(u) if u is not None else str(i) for i, u in enumerate(uids or [None] * len(preds))]
+    uid_values = uids
+    if uid_values is None or len(uid_values) == 0:
+        raise ValueError("uids is required for training reward")
+    group_keys = [str(u) for u in uid_values]
     pseudo_labels = _majority_vote_labels(preds, group_keys)
     return [1.0 if pred and (pred == label or label in pred or pred in label) else 0.0 for pred, label in zip(preds, pseudo_labels)]
 
