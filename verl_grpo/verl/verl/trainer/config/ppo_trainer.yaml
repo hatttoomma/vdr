@@ -733,16 +733,6 @@ custom_reward_function:
   # The name of the reward function within the specified file. Default is 'compute_score'.
   name: compute_score
 
-# custom reward function definition for validation
-custom_reward_function_val:
-
-  # The path to the file containing your customized validation reward function.
-  # If not specified, it falls back to custom_reward_function.
-  path: null
-
-  # The name of the validation reward function within the specified file.
-  name: compute_score
-
 # config for the algorithm
 algorithm:
 
