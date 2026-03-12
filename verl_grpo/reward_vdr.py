@@ -28,8 +28,6 @@ def compute_score(
 
     if not pred:
         return 0.0
-    if pred == gt:
+    if pred == gt or gt in pred or pred in gt:
         return 1.0
-    if gt in pred or pred in gt:
-        return 0.5
     return 0.0

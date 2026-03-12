@@ -29,7 +29,7 @@ python3 -m verl.trainer.main_ppo \
   data.truncation=error \
   data.image_key=images \
   actor_rollout_ref.model.path="${MODEL_PATH}" \
-  actor_rollout_ref.actor.optim.lr=1e-6 \
+  actor_rollout_ref.actor.optim.lr=1e-1 \
   actor_rollout_ref.model.enable_gradient_checkpointing=True \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
@@ -63,7 +63,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
   trainer.n_gpus_per_node=4 \
   trainer.nnodes=1 \
-  trainer.save_freq=20 \
+  trainer.save_freq=50 \
   trainer.test_freq=10 \
   trainer.total_epochs=10 \
   "$@"
