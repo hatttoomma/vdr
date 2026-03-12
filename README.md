@@ -20,5 +20,11 @@ TODO list:
 support tool calling workflow
 support TTRL training:
 1. implement VLM GRPO using verl
+OOM fix: limit context length by resizing iamge
+test: debug on realworldqa
+debug on mmsearch without tools
 2. modify reward to majority vote and modify training data to unlabled data
-add image crop tools        
+debug on realworldqa
+
+
+3. add image crop tools and code intepreter

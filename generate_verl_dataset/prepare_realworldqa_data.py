@@ -27,10 +27,7 @@ def resize_to_max_pixels(image: Image.Image, max_pixels: int) -> Image.Image:
     return image
 
 
-def image_to_png_bytes(image: Image.Image) -> bytes:
-    buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
-    return buffer.getvalue()
+
 
 
 def build_prompt(question: str) -> list[dict[str, str]]:
@@ -41,7 +38,6 @@ def make_map_fn(data_source: str, split: str, max_pixels: int):
     def process_fn(example: dict[str, Any], idx: int) -> dict[str, Any]:
         image = decode_image(example["image"])
         image = resize_to_max_pixels(image, max_pixels)
-        image_bytes = image_to_png_bytes(image)
 
         question = str(example["question"])
         answer = str(example["answer"])
@@ -49,7 +45,7 @@ def make_map_fn(data_source: str, split: str, max_pixels: int):
         return {
             "data_source": data_source,
             "prompt": build_prompt(question),
-            "images": [image_bytes],
+            "images": [image],
             "ability": "vqa",
             "reward_model": {"style": "rule", "ground_truth": answer},
             "extra_info": {
