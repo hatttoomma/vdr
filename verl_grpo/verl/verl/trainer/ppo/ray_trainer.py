@@ -23,7 +23,6 @@ import os
 import uuid
 from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
 from pprint import pprint
@@ -599,25 +598,25 @@ class RayPPOTrainer:
         return str(value)
 
     def _build_validation_records(self, batch: DataProto, inputs: list[str], outputs: list[str], scores: list[float]) -> list[dict]:
-        """Build per-sample validation records for file logging."""
+        """Build lightweight per-sample validation records for file logging."""
         if len(inputs) != len(outputs) or len(outputs) != len(scores):
             raise ValueError(f"Validation record length mismatch: inputs={len(inputs)}, outputs={len(outputs)}, scores={len(scores)}")
 
         sample_cnt = len(outputs)
+        reward_models = batch.non_tensor_batch.get("reward_model", None)
         records = []
         for i in range(sample_cnt):
-            sample_info = {}
-            for key, values in batch.non_tensor_batch.items():
-                if len(values) == sample_cnt:
-                    sample_info[key] = self._to_jsonable(values[i])
+            ground_truth = None
+            if reward_models is not None and len(reward_models) == sample_cnt:
+                reward_model_i = reward_models[i]
+                if isinstance(reward_model_i, dict):
+                    ground_truth = reward_model_i.get("ground_truth", None)
 
             record = {
-                "step": self.global_steps,
-                "validation_time": datetime.utcnow().isoformat(timespec="seconds") + "Z",
-                "model_input": inputs[i],
-                "model_answer": outputs[i],
+                "question": inputs[i],
+                "answer": outputs[i],
+                "ground_truth": self._to_jsonable(ground_truth),
                 "score": scores[i],
-                "validation_sample": sample_info,
             }
             records.append(record)
         return records
