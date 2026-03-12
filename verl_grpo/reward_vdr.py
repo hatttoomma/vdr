@@ -26,7 +26,10 @@ def _majority_vote_labels(preds: list[str], group_keys: list[str]) -> list[str]:
     for key, pairs in grouped.items():
         counter = Counter(pred for _, pred in pairs if pred)
         if not counter:
-            raise ValueError(f"No valid predictions found for group key: {key}")
+            # If a group has no valid extracted answers, keep an empty pseudo label
+            # so downstream reward computation yields 0.0 instead of interrupting.
+            majority[key] = ""
+            continue
         max_cnt = max(counter.values())
         candidates = {p for p, c in counter.items() if c == max_cnt}
         # deterministic tie-break: earliest appeared candidate in this group
