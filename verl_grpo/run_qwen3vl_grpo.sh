@@ -23,7 +23,7 @@ python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=4 \
+  data.train_batch_size=2 \
   data.max_prompt_length="${MAX_PROMPT_LENGTH}" \
   data.max_response_length="${MAX_RESPONSE_LENGTH}" \
   data.filter_overlong_prompts=True \
@@ -35,7 +35,7 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.model.lora_rank="${LORA_RANK}" \
   actor_rollout_ref.model.lora_alpha="${LORA_ALPHA}" \
   actor_rollout_ref.model.target_modules="${LORA_TARGET_MODULES}" \
-  actor_rollout_ref.actor.ppo_mini_batch_size=4 \
+  actor_rollout_ref.actor.ppo_mini_batch_size=2 \
   actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
   actor_rollout_ref.actor.use_kl_loss=True \
   actor_rollout_ref.actor.kl_loss_coef=0.001 \
@@ -66,7 +66,7 @@ python3 -m verl.trainer.main_ppo \
   trainer.logger='["console"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
-  trainer.n_gpus_per_node=4 \
+  trainer.n_gpus_per_node=2 \
   trainer.nnodes=1 \
   trainer.save_freq=100 \
   trainer.test_freq=10 \
