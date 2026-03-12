@@ -88,6 +88,8 @@ def get_prompt_text(row: dict[str, Any]) -> str:
         return str(row["question"])
 
     prompt = row.get("prompt")
+    print(prompt)
+    raise ValueError()
     
 
     return prompt
