@@ -22,7 +22,7 @@ python3 -m verl.trainer.main_ppo \
   algorithm.adv_estimator=grpo \
   data.train_files="${TRAIN_FILE}" \
   data.val_files="${VAL_FILE}" \
-  data.train_batch_size=$NUM_GPUS \
+  data.train_batch_size=8 \
   data.max_prompt_length="${MAX_PROMPT_LENGTH}" \
   data.max_response_length="${MAX_RESPONSE_LENGTH}" \
   data.filter_overlong_prompts=True \
@@ -32,8 +32,8 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.actor.optim.lr=5e-7 \
   actor_rollout_ref.model.enable_gradient_checkpointing=True \
   actor_rollout_ref.model.lora_rank=0 \
-  actor_rollout_ref.actor.ppo_mini_batch_size=$NUM_GPUS \
-  actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
+  actor_rollout_ref.actor.ppo_mini_batch_size=8 \
+  actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=2 \
   actor_rollout_ref.actor.use_kl_loss=True \
   actor_rollout_ref.actor.kl_loss_coef=0.001 \
   actor_rollout_ref.rollout.name="${ENGINE}" \
@@ -46,8 +46,8 @@ python3 -m verl.trainer.main_ppo \
   actor_rollout_ref.rollout.load_format="${ROLLOUT_LOAD_FORMAT}" \
   actor_rollout_ref.rollout.n=16 \
   actor_rollout_ref.rollout.val_kwargs.temperature=1.0 \
-  actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
-  actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
+  actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=4 \
+  actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=4 \
   +actor_rollout_ref.rollout.engine_kwargs.vllm.kv_cache_dtype=fp8 \
   actor_rollout_ref.actor.fsdp_config.param_offload=True \
   +actor_rollout_ref.actor.fsdp_config.grad_offload=True \
