@@ -88,7 +88,7 @@ def load_reward_manager(config, tokenizer, num_examine, for_validation=False, **
     compute_score = get_custom_reward_fn(config, config_key=custom_reward_key)
     if compute_score is None and for_validation:
         # Fallback to training reward function if validation-specific one is not provided.
-        compute_score = get_custom_reward_fn(config, config_key="custom_reward_function")
+        raise ValueError("No validation reward function provided")
     final_compute_score = compute_score
 
     if compute_score is None:

@@ -13,11 +13,7 @@ from transformers import AutoProcessor, Qwen3VLForConditionalGeneration
 
 
 def decode_image(image_field: Any) -> Image.Image:
-    """
-    将数据集里的 image 字段解码为 PIL.Image。
-    这个数据集页面显示 image 列是字符串形式的编码内容，示例既出现了 JPEG 的 /9j/ 开头，也出现了 PNG 的 iVBORw0KGgo 开头，
-    因此这里按 base64 字符串处理。:contentReference[oaicite:1]{index=1}
-    """
+
     if isinstance(image_field, Image.Image):
         return image_field.convert("RGB")
 
