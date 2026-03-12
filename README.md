@@ -25,6 +25,7 @@ test: debug on realworldqa
 debug on mmsearch without tools
 2. modify reward to majority vote and modify training data to unlabled data
 debug on mmsearch without tools
+0.11 -> 0.25
 add tools and reasoning chain
 
 3. add image crop tools and code intepreter

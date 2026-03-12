@@ -3,8 +3,8 @@ set -euo pipefail
 set -x
 
 ENGINE=${1:-vllm}
-TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/val.parquet"}
-VAL_FILE=${VAL_FILE:-"./mmsearch_data/val.parquet"}
+TRAIN_FILE=${TRAIN_FILE:-"./mmsearch_data/train.parquet"}
+VAL_FILE=${VAL_FILE:-"./mmsearch_data/train.parquet"}
 MODEL_PATH=${MODEL_PATH:-"Qwen/Qwen2.5-VL-3B-Instruct"}
 GPU_MEMORY_UTILIZATION=${GPU_MEMORY_UTILIZATION:-0.5}
 MAX_PROMPT_LENGTH=${MAX_PROMPT_LENGTH:-1024}
