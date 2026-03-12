@@ -84,12 +84,8 @@ def decode_image(image_field: Any) -> Image.Image:
 
 
 def get_prompt_text(row: dict[str, Any]) -> str:
-    if row.get("question"):
-        return str(row["question"])
-
     prompt = row.get("prompt")
     print(prompt)
-    raise ValueError()
     
 
     return prompt
