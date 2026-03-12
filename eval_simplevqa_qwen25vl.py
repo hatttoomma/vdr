@@ -147,7 +147,7 @@ def generate_answer(
 
     output_text = processor.batch_decode(
         generated_ids_trimmed,
-        skip_special_tokens=True,
+        skip_special_tokens=False,
         clean_up_tokenization_spaces=False,
     )[0]
     return output_text.strip()
