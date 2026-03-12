@@ -209,6 +209,7 @@ def main() -> None:
                     question=question,
                     max_new_tokens=args.max_new_tokens,
                 )
+                print(prediction)
                 score = compute_score_ground_truth(prediction, ground_truth)
                 score_sum += score
 
