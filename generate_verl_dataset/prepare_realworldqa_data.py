@@ -34,11 +34,7 @@ def image_to_png_bytes(image: Image.Image) -> bytes:
 
 
 def build_prompt(question: str) -> list[dict[str, str]]:
-    instruction = (
-        "Answer the question based on the image. "
-        "Return the final answer in <answer>...</answer>."
-    )
-    return [{"role": "user", "content": f"{question}\n\n{instruction}"}]
+    return [{"role": "user", "content": question}]
 
 
 def make_map_fn(data_source: str, split: str, max_pixels: int):
