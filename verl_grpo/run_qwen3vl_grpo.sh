@@ -60,7 +60,7 @@ python3 -m verl.trainer.main_ppo \
   reward_model.reward_manager=batch \
   algorithm.use_kl_in_reward=False \
   trainer.critic_warmup=0 \
-  trainer.logger='["console"]' \
+  trainer.logger='["console","wandb"]' \
   trainer.project_name='vdr_qwen3vl_grpo' \
   trainer.experiment_name='qwen2.5-vl-3b-instruct_grpo' \
   trainer.n_gpus_per_node=$NUM_GPUS \

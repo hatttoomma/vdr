@@ -78,11 +78,7 @@ def to_resized_pil_image(image_field: Any, target_size: tuple[int, int] = TARGET
 
 def build_prompt_text(atomic_question: str) -> str:
     lines = [
-        "You are a helpful multimodal assistant.",
-        "Answer the question according to the image.",
-        "",
         "<image>",
-        "",
         f"Question: {atomic_question}",
     ]
     lines.extend([

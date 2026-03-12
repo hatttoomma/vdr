@@ -131,11 +131,7 @@ def build_prompt_text(example: Dict[str, Any], use_image_field: str) -> str:
     query = safe_get(example, "query", "").strip()
 
     lines = [
-        "You are a helpful multimodal assistant.",
-        "Reason with the image and the question step by step.",
-        "",
         "<image>",
-        "",
         f"Question: {query}",
     ]
 
