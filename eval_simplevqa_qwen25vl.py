@@ -88,22 +88,9 @@ def get_prompt_text(row: dict[str, Any]) -> str:
         return str(row["question"])
 
     prompt = row.get("prompt")
-    if isinstance(prompt, list) and prompt:
-        first_turn = prompt[0]
-        if isinstance(first_turn, dict):
-            content = first_turn.get("content", "")
-            if isinstance(content, str):
-                return content.replace("<image>", "").strip()
-            if isinstance(content, list):
-                text_parts = []
-                for item in content:
-                    if isinstance(item, dict) and item.get("type") == "text":
-                        text_parts.append(str(item.get("text", "")))
-                merged = "\n".join(text_parts).replace("<image>", "").strip()
-                if merged:
-                    return merged
+    
 
-    return ""
+    return prompt
 
 
 def get_ground_truth(row: dict[str, Any]) -> str:
@@ -196,40 +183,29 @@ def main() -> None:
             question = get_prompt_text(row)
             ground_truth = get_ground_truth(row)
 
-            try:
-                images = row.get("images", [])
-                if not isinstance(images, list) or len(images) == 0:
-                    raise ValueError("No image found in `images` field.")
-                image = decode_image(images[0])
+            images = row.get("images", [])
+            if not isinstance(images, list) or len(images) == 0:
+                raise ValueError("No image found in `images` field.")
+            image = decode_image(images[0])
 
-                prediction = generate_answer(
-                    model=model,
-                    processor=processor,
-                    image=image,
-                    question=question,
-                    max_new_tokens=args.max_new_tokens,
-                )
-                print(prediction)
-                score = compute_score_ground_truth(prediction, ground_truth)
-                score_sum += score
+            prediction = generate_answer(
+                model=model,
+                processor=processor,
+                image=image,
+                question=question,
+                max_new_tokens=args.max_new_tokens,
+            )
+            print(prediction)
+            score = compute_score_ground_truth(prediction, ground_truth)
+            score_sum += score
 
-                record = {
-                    "id": sample_id,
-                    "question": question,
-                    "ground_truth": ground_truth,
-                    "prediction": prediction,
-                    "score": score,
-                }
-            except Exception as exc:  # noqa: BLE001
-                num_errors += 1
-                record = {
-                    "id": sample_id,
-                    "question": question,
-                    "ground_truth": ground_truth,
-                    "prediction": None,
-                    "score": 0.0,
-                    "error": repr(exc),
-                }
+            record = {
+                "id": sample_id,
+                "question": question,
+                "ground_truth": ground_truth,
+                "prediction": prediction,
+                "score": score,
+            }
 
             fout.write(json.dumps(record, ensure_ascii=False) + "\n")
             fout.flush()
